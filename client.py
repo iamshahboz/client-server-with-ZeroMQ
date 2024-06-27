@@ -1,17 +1,32 @@
-import zmq
+import logging
+from pydantic import BaseModel
+from zmq_message import ZMQPublisher
+import time
 
-context = zmq.Context()
+logging.basicConfig(level=logging.INFO)
 
-print("Connecting to hello world server...")
-socket = context.socket(zmq.REQ)
-socket.connect("tcp://localhost:5555")
+MESSAGE_SENDING_PORT = 8880
+MESSAGE_SENDING_CHANNEL = f'tcp://0.0.0.0:{MESSAGE_SENDING_PORT}'
 
-# do 10 requests waiting each time for response 
+class Student(BaseModel):
+    name: str
+    age: int
+    email: str
 
-for request in range(10):
-    print("Sending request %s..." % request)
-    socket.send(b'Hello')
 
-    message = socket.recv()
-    print("Recieved reply %s [ %s ]" % (request, message))
+def run_message_publisher():
+    publishing_period_secs = 1 
+    publisher = ZMQPublisher(f"tcp://*:{MESSAGE_SENDING_PORT}")
+    while True:
+        msg = Student(
+            name = 'Jack',
+            age = 22,
+            email= 'jacksmith@gmail.com'
+        )
+        logging.info(f'[SEND] {msg}')
+        publisher.send_msg(msg)
+        time.sleep(1)
+        
+if __name__ == '__main__':
+    run_message_publisher()
     
