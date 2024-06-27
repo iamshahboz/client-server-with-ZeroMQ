@@ -1,22 +1,20 @@
-## Hello world in Python
-## Binds REP Socket to tcp://*:5555
-
-# Expects b"Hello" from client, replies with b"world"
-
+import logging
+from pydantic import BaseModel
+from zmq_message import ZMQSubscriber
 import time
-import zmq
 
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://*:5555")
+logging.basicConfig(level=logging.INFO)
 
-while True:
-    # wait for the next request from the client
-    message = socket.recv()
-    print("Recieved request: %s" % message)
+MESSAGE_SENDING_PORT = 8880
+MESSAGE_SENDING_CHANNEL = f'tcp://0.0.0.0:{MESSAGE_SENDING_PORT}'
 
-    # do some work
-    time.sleep(1)
-
-    socket.send(b'World')
-    
+def log_incoming_messages():
+    subscriber = ZMQSubscriber(
+        address= MESSAGE_SENDING_CHANNEL, timeout_ms=-1, linger_period_ms=0
+    )
+    logging.info('Waiting for messages')
+    for msg in subscriber.get_message(-1):
+        logging.info(f'Coming message is {msg}')
+        
+if __name__ == '__main__':
+    log_incoming_messages()
