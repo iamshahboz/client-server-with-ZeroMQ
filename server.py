@@ -1,20 +1,25 @@
 import logging
-from pydantic import BaseModel
 from zmq_message import ZMQSubscriber
-import time
+
+
 
 logging.basicConfig(level=logging.INFO)
 
-MESSAGE_SENDING_PORT = 8880
-MESSAGE_SENDING_CHANNEL = f'tcp://0.0.0.0:{MESSAGE_SENDING_PORT}'
+INCOMING_MESSAGE_PORT = 8880
+IP_TO_LISTEN_TO = '127.0.0.1'
+INCOMING_MESSAGE_CHANNEL = f"tcp://{IP_TO_LISTEN_TO}:{INCOMING_MESSAGE_PORT}"
 
-def log_incoming_messages():
-    subscriber = ZMQSubscriber(
-        address= MESSAGE_SENDING_CHANNEL, timeout_ms=-1, linger_period_ms=0
+
+def log_serialized_message():
+    """
+    Action any messages coming out of zmq
+    """
+    receiver_subscriber = ZMQSubscriber(
+        address=INCOMING_MESSAGE_CHANNEL, timeout_ms=-1, linger_period_ms=0
     )
-    logging.info('Waiting for messages')
-    for msg in subscriber.get_message(-1):
-        logging.info(f'Coming message is {msg}')
-        
+    logging.info("Waiting for messages")
+    for msg in receiver_subscriber.get_messages(-1):
+        logging.info(f'Coming message is {msg}') 
+
 if __name__ == '__main__':
-    log_incoming_messages()
+    log_serialized_message()
